@@ -1,0 +1,1 @@
+export const FORMATO_RASCUNHO_ATUAL = 5

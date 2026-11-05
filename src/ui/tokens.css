@@ -1,0 +1,31 @@
+:root {
+  --cor-marca: #1f5f8b;
+  --cor-marca-hover: #1c567d;
+  --cor-fundo: #f7f8f9;
+  --cor-cartao: #ffffff;
+  --cor-borda: #e3e6e8;
+  --cor-texto: #1b1f23;
+  --cor-texto-secundario: #5f6b76;
+  --cor-erro: #c53030;
+  --cor-aviso: #b7791f;
+  --cor-sucesso: #2f855a;
+  --cor-info: #2b6cb0;
+  --fonte: Inter, "Segoe UI", system-ui, sans-serif;
+  --tamanho-14: 14px;
+  --tamanho-16: 16px;
+  --tamanho-20: 20px;
+  --tamanho-24: 24px;
+  --tamanho-32: 32px;
+  --espaco-4: 4px;
+  --espaco-8: 8px;
+  --espaco-12: 12px;
+  --espaco-16: 16px;
+  --espaco-24: 24px;
+  --espaco-32: 32px;
+  --espaco-48: 48px;
+  --raio: 8px;
+  --raio-etiqueta: 999px;
+  --sombra: 0 1px 2px rgb(27 31 35 / 6%);
+  --alvo-toque: 44px;
+  --largura-max: 1200px;
+}
