@@ -2,6 +2,7 @@ import { ajudaPintura, TEXTO_AJUDA_PERIODO, TEXTO_AJUDA_RETIRADA } from '../domi
 import {
   corLetivoAmostra,
   corTextoSobre,
+  parametrosDoTipoId,
   TIPO_FERIADO,
   TIPO_RECESSO,
   type Calendario,
@@ -56,7 +57,9 @@ export function AjudaDoTipo({
   tipoId: string
   tipoLetivoId?: string
 }) {
-  const ajuda = ajudaPintura(tipoId)
+  const ajuda = ajudaPintura(tipoId, {
+    combinaComLetivo: parametrosDoTipoId(calendario, tipoId).combinaComLetivo,
+  })
   if (!ajuda) return null
   const corFundo =
     ajuda.fundo === 'letivo'
@@ -71,6 +74,26 @@ export function AjudaDoTipo({
       texto={ajuda.texto}
       corFundo={corFundo}
       corMarca={ajuda.marca ? corDoTipo(calendario, tipoId) : null}
+    />
+  )
+}
+
+export function AjudaDeCombina({
+  calendario,
+  combinaComLetivo,
+  corMarca,
+}: {
+  calendario: Calendario
+  combinaComLetivo: boolean
+  corMarca: string
+}) {
+  const ajuda = ajudaPintura('tipo-criado', { combinaComLetivo })
+  if (!ajuda) return null
+  return (
+    <AjudaPintura
+      texto={ajuda.texto}
+      corFundo={ajuda.fundo === 'letivo' ? corLetivoAmostra(calendario) : null}
+      corMarca={ajuda.marca ? corMarca : null}
     />
   )
 }

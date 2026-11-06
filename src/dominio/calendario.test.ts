@@ -5,9 +5,12 @@ import {
   apagarPeriodo,
   atualizarPeriodo,
   criarCalendario,
+  definirParametrosTipo,
   isoDeDataBr,
   legenda,
+  parametrosDoTipo,
   tipoDoDia,
+  tipoMostraCombina,
   tiposCriadosOrdenados,
   tiposDiaOrdenados,
   tiposPadraoOrdenados,
@@ -287,6 +290,36 @@ describe('tiposDiaOrdenados', () => {
       'Aula inaugural',
       'Plantão',
     ])
+  })
+})
+
+describe('tipoMostraCombina', () => {
+  it('esconde o rádio em Feriado, Recesso e Férias', () => {
+    const cal = calendario2026()
+    for (const id of ['tipo-feriado', 'tipo-recesso', 'tipo-ferias']) {
+      const tipo = cal.tiposDia.find((t) => t.id === id)
+      expect(tipo).toBeDefined()
+      if (!tipo) continue
+      expect(tipoMostraCombina(tipo)).toBe(false)
+      expect(parametrosDoTipo(tipo).combinaComLetivo).toBe(false)
+    }
+  })
+
+  it('não deixa gravar combina em Férias', () => {
+    const cal = definirParametrosTipo(calendario2026(), 'tipo-ferias', { combinaComLetivo: true })
+    const ferias = cal.tiposDia.find((t) => t.id === 'tipo-ferias')
+    expect(ferias).toBeDefined()
+    if (!ferias) return
+    expect(parametrosDoTipo(ferias).combinaComLetivo).toBe(false)
+    expect(tipoMostraCombina(ferias)).toBe(false)
+  })
+
+  it('Evento e Recuperação continuam com o rádio', () => {
+    const cal = calendario2026()
+    const evento = cal.tiposDia.find((t) => t.id === 'tipo-evento')
+    const recuperacao = cal.tiposDia.find((t) => t.id === 'tipo-recuperacao')
+    expect(evento && tipoMostraCombina(evento)).toBe(true)
+    expect(recuperacao && tipoMostraCombina(recuperacao)).toBe(true)
   })
 })
 

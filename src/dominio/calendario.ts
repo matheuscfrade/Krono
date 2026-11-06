@@ -50,6 +50,8 @@ export type Evento = {
   editado?: boolean
   dataOriginal?: string
   exclusivo?: boolean
+  /** Dias em que o evento pode ficar em feriado, recesso ou férias sem aviso no calendário. */
+  aceitosEmFeriado?: string[]
 }
 
 export type ModeloRegraUsuario = 'presenca' | 'prazo'
@@ -330,6 +332,7 @@ export function ehTipoLetivo(tipo: { id: string }): boolean {
 }
 
 function combinaDoTipo(tipo: TipoDia, padrao: boolean): boolean {
+  if (tipoNuncaCombina(tipo.id)) return false
   if (typeof tipo.combinaComLetivo === 'boolean') return tipo.combinaComLetivo
   const legado = tipo as TipoDia & { tiraLetivo?: boolean; viraAula?: boolean }
   if (legado.tiraLetivo === true && legado.viraAula !== true) return false
@@ -357,8 +360,13 @@ export function tipoCriaAula(tipoId: string): boolean {
   return tipoId === TIPO_REPOSICAO || tipoId === TIPO_SABADO_LETIVO
 }
 
+export function tipoNuncaCombina(tipoId: string): boolean {
+  return tipoId === TIPO_FERIADO || tipoId === TIPO_RECESSO || tipoId === 'tipo-ferias'
+}
+
 export function tipoMostraCombina(tipo: TipoDia): boolean {
   if (ehTipoLetivo(tipo)) return false
+  if (tipoNuncaCombina(tipo.id)) return false
   return !tipoCriaAula(tipo.id)
 }
 
@@ -934,7 +942,9 @@ export function definirParametrosTipo(
         ...resto,
         combinaComLetivo: tipoCriaAula(tipoId)
           ? true
-          : (parametros.combinaComLetivo ?? atual.combinaComLetivo),
+          : tipoNuncaCombina(tipoId)
+            ? false
+            : (parametros.combinaComLetivo ?? atual.combinaComLetivo),
         entraNoPrazo: parametros.entraNoPrazo ?? atual.entraNoPrazo,
       }
     }),
@@ -1468,11 +1478,24 @@ export function atualizarEvento(
               inicio,
               fim,
               dataOriginal: entrada.tipoId === TIPO_REPOSICAO ? dataOriginal : undefined,
+              aceitosEmFeriado: aceitosAindaNoIntervalo(e, inicio, fim),
             }
           : e,
       ),
     },
   }
+}
+
+function aceitosAindaNoIntervalo(
+  evento: Evento,
+  inicio: string,
+  fim: string,
+): string[] | undefined {
+  const ainda = evento.aceitosEmFeriado?.filter(
+    (iso) => compararIso(inicio, iso) <= 0 && compararIso(iso, fim) <= 0,
+  )
+  if (!ainda || ainda.length === 0) return undefined
+  return ainda
 }
 
 function validarDatasFeriado(

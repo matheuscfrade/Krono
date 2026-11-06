@@ -32,4 +32,30 @@ describe('rascunho', () => {
   it('recusa json inválido', () => {
     expect(lerRascunho('não é json').ok).toBe(false)
   })
+
+  it('abre de volta o aceite de evento em feriado', () => {
+    const r = criarCalendario({ nome: 'Cursos Técnicos', instituicao: 'IFMG', ano: 2026 })
+    if (!r.ok) throw new Error('criar')
+    const comAceite = {
+      ...r.calendario,
+      eventos: [
+        ...r.calendario.eventos,
+        {
+          id: 'evento-desfile',
+          tipoId: 'tipo-evento',
+          inicio: '2026-06-06',
+          fim: '2026-06-06',
+          descricao: 'Desfile da cidade',
+          origem: 'manual' as const,
+          aceitosEmFeriado: ['2026-06-06'],
+        },
+      ],
+    }
+    const aberto = lerRascunho(serializarCalendario(comAceite))
+    expect(aberto.ok).toBe(true)
+    if (!aberto.ok) return
+    expect(aberto.calendario.eventos.find((e) => e.id === 'evento-desfile')?.aceitosEmFeriado).toEqual(
+      ['2026-06-06'],
+    )
+  })
 })

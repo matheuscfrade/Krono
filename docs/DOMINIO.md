@@ -10,7 +10,7 @@
 - **Evento:** uma data ou um intervalo de datas com um tipo e uma descrição. É a única informação que o usuário digita; o resto é derivado. Reposição guarda também a data original (`dataOriginal`).
 - **Reposição:** um dia novo de aula no lugar de uma data perdida. O dia novo **é letivo** (sábado inclusive). Nome sugerido: “Reposição de aula de sexta-feira (03/04/2026)”.
 - **Retirada de letivo:** um dia que era aula deixa de ser. Fica em branco, sem recesso e sem cor nova. Tipo interno `tipo-retirada-letivo`: não entra no select de Eventos nem na legenda.
-- **Conflito:** situação em que duas informações do calendário não combinam. Pode ser **erro** (precisa corrigir) ou **aviso** (o usuário pode aceitar, com justificativa).
+- **Conflito:** situação em que duas informações do calendário não combinam. Pode ser **erro** (precisa corrigir) ou **aviso** (o usuário pode aceitar). Evento em feriado, recesso ou férias continua aviso; se a pessoa escolher **Manter neste dia**, o lançamento fica e a marca some do calendário.
 - **Regra ligável:** checagem que a pessoa liga ou desliga neste calendário. O Krono avisa; não impede salvar. Nenhuma regra usa nome de instituição.
 
 ## O que o exemplo mostra
@@ -38,7 +38,7 @@
 ## Dias letivos
 - **Dia letivo:** dia de efetivo trabalho escolar (aula ou atividade com turma, docente e frequência), dentro ou fora da sala.
 - **Mínimo padrão:** 200 dias no **ano** (LDB, art. 47), campo `minimoDiasLetivos`. A pessoa pode mudar o número neste calendário (tela de regras, ainda fora desta spec). O mesmo padrão vale para qualquer tipo de curso; não há mínimo automático diferente por técnico ou graduação.
-- **Conta:** o dia é aula (`diaEhLetivo`). Padrão: segunda a sexta no período, sábado com Evento/Sábado letivo e reposição; feriado, recesso, férias, exames, recuperação e retirada tiram a aula. A pessoa muda isso no rádio de combinar de cada tipo.
+- **Conta:** o dia é aula (`diaEhLetivo`). Padrão: segunda a sexta no período, sábado com Evento/Sábado letivo e reposição; feriado, recesso, férias, exames, recuperação e retirada tiram a aula. Feriado, Recesso e Férias nunca combinam (sem rádio). Nos demais tipos, a pessoa muda isso no rádio de combinar.
 - **Aviso** (não erro) se o total do ano ficar **abaixo** do mínimo. **Aviso** também se ficar **acima** (retirar aula: spec de regras, Fase 4).
 - **Aulas a repor:** só se o feriado ou recesso tirou um dia que **seria aula** (segunda a sexta no período, ou sábado com evento/sábado letivo) e o total ainda está **abaixo do mínimo**. Intervalo conta cada dia útil perdido. 1º/1 e Natal fora da etapa não pedem. O botão **Repor** fica na linha em Feriados e recessos. Sem botão Não repor: ao chegar no mínimo, o pedido some.
 - Exames finais, no padrão, **não combinam** com dia letivo: não são aula e não entram nos 200. Se a pessoa ligar **Permite combinar**, o dia da etapa continua aula e entra na soma.
@@ -57,12 +57,13 @@ Um rádio **Permite / Não permite combinar com dia letivo** e o interruptor **P
 
 | Tipo | Combina com dia letivo | Origem ou destino de prazo |
 |---|---|---|
-| Feriado, Recesso, Férias, Recuperação, Retirada | não | não |
+| Feriado, Recesso, Férias | (sem rádio; nunca combinam) | não |
+| Recuperação, Retirada | não | não |
 | Exames finais | não | sim |
 | Evento, tipo criado pela pessoa | sim | não |
 | Reposição, Sábado letivo | (sem rádio; sempre criam aula) | não |
 
-**Não permite combinar:** o dia deixa de ser aula. **Permite combinar:** se o dia já era aula, continua aula + marca; se não era, continua sem aula. Evento no sábado continua aula. Domingo nunca vira aula. Reposição e sábado letivo criam aula onde ainda não havia.
+**Não permite combinar:** o dia deixa de ser aula. **Permite combinar:** se o dia já era aula, continua aula + marca; se não era, continua sem aula. Evento no sábado continua aula. Domingo nunca vira aula. Feriado, Recesso e Férias nunca combinam. Reposição e sábado letivo criam aula onde ainda não havia.
 
 Os totais (mês, período, ano e o mínimo de 200) são a quantidade de dias letivos. Não há interruptor separado “conta nos totais”.
 
@@ -74,7 +75,7 @@ A tabela e o Excel mostram dias letivos **por mês**, **por período** e **no an
 ## Conflitos tratados
 | # | Situação | Gravidade |
 |---|---|---|
-| 1 | Evento acadêmico em dia de feriado, recesso ou férias | Aviso |
+| 1 | Evento acadêmico em dia de feriado, recesso ou férias | Aviso (pode manter o evento no dia; aí some a marca no calendário) |
 | 2 | Dois eventos que não podem acontecer no mesmo dia (marcados como exclusivos) | Erro |
 | 3 | Períodos que se sobrepõem | Erro |
 | 4 | Dias do ano sem período nem tipo definido (lacuna) | Aviso |
@@ -112,7 +113,7 @@ Ordem estável dos tipos (da mais “institucional” para a mais corrente): fer
 - Tudo é gerado no navegador; nada sai do computador da pessoa.
 
 ## Rascunho (.json)
-- Conteúdo: versão do formato (**5**); dados do calendário; períodos; tipos de marcação (cores, `combinaComLetivo`, `entraNoPrazo`); eventos; `pontosFacultativos` (legado); mínimo de dias letivos; regras (`mostrarTotais`, `avisoMinimo`, `regrasUsuario` com `unidade` no prazo).
+- Conteúdo: versão do formato (**5**); dados do calendário; períodos; tipos de marcação (cores, `combinaComLetivo`, `entraNoPrazo`); eventos (incluindo `aceitosEmFeriado` quando a pessoa mantém o evento no feriado); `pontosFacultativos` (legado); mínimo de dias letivos; regras (`mostrarTotais`, `avisoMinimo`, `regrasUsuario` com `unidade` no prazo).
 - Arquivo de versão antiga precisa continuar abrindo: formato **1** migra itens de conferência; formato **2** preenche `unidade: corridos` nos prazos; formato **3** troca `tiraLetivo`/`viraAula` por `combinaComLetivo`; formato **4** descarta `contaNosTotais`. O arquivo salvo sai como v5.
 - Detalhes do formato serão definidos na spec do rascunho e documentados aqui.
 

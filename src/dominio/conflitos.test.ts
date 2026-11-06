@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest'
 import {
   adicionarEvento,
   adicionarPeriodo,
+  atualizarEvento,
   criarCalendario,
   regrasPadrao,
 } from './calendario'
-import { conflitosDoCalendario } from './conflitos'
+import { aceitarAvisoEventoNoDia, conflitosDoCalendario } from './conflitos'
 
 function calEtapa() {
   const r = criarCalendario({ nome: 'Cursos Técnicos', instituicao: 'IFMG', ano: 2026 })
@@ -92,6 +93,90 @@ describe('conflitosDoCalendario', () => {
     const cruzado = conflitosDoCalendario(cal).find((c) => c.numero === 3)
     expect(cruzado?.gravidade).toBe('erro')
     expect(cruzado?.iso).toBe('2026-04-01')
+  })
+
+  it('aceitar evento em feriado some o aviso daquele dia e guarda no rascunho', () => {
+    const base = calEtapa()
+    const ev = adicionarEvento(base, {
+      tipoId: 'tipo-evento',
+      descricao: 'Desfile da cidade',
+      inicio: '2026-04-21',
+      fim: '2026-04-21',
+    })
+    expect(ev.ok).toBe(true)
+    if (!ev.ok) return
+    const evento = ev.calendario.eventos.find((e) => e.descricao === 'Desfile da cidade')
+    expect(evento).toBeDefined()
+    if (!evento) return
+    const aceito = aceitarAvisoEventoNoDia(ev.calendario, evento.id, '2026-04-21')
+    expect(aceito.eventos.find((e) => e.id === evento.id)?.aceitosEmFeriado).toEqual(['2026-04-21'])
+    expect(conflitosDoCalendario(aceito).some((c) => c.numero === 1 && c.iso === '2026-04-21')).toBe(
+      false,
+    )
+  })
+
+  it('aceitar um dia de feriado não some o aviso de outro dia do mesmo evento', () => {
+    const base = calEtapa()
+    const ev = adicionarEvento(base, {
+      tipoId: 'tipo-evento',
+      descricao: 'Semana da pátria',
+      inicio: '2026-04-21',
+      fim: '2026-04-21',
+    })
+    expect(ev.ok).toBe(true)
+    if (!ev.ok) return
+    const evento = ev.calendario.eventos.find((e) => e.descricao === 'Semana da pátria')
+    if (!evento) return
+    const comFeriadoManual = {
+      ...ev.calendario,
+      eventos: [
+        ...ev.calendario.eventos,
+        {
+          id: 'feriado-extra',
+          tipoId: 'tipo-feriado',
+          inicio: '2026-04-22',
+          fim: '2026-04-22',
+          descricao: 'Feriado extra',
+          origem: 'manual' as const,
+        },
+      ],
+    }
+    const estendido = {
+      ...comFeriadoManual,
+      eventos: comFeriadoManual.eventos.map((e) =>
+        e.id === evento.id ? { ...e, fim: '2026-04-22' } : e,
+      ),
+    }
+    const aceito = aceitarAvisoEventoNoDia(estendido, evento.id, '2026-04-21')
+    const lista = conflitosDoCalendario(aceito)
+    expect(lista.some((c) => c.numero === 1 && c.iso === '2026-04-21')).toBe(false)
+    expect(lista.some((c) => c.numero === 1 && c.iso === '2026-04-22')).toBe(true)
+  })
+
+  it('mover o evento para outro feriado volta o aviso', () => {
+    const base = calEtapa()
+    const ev = adicionarEvento(base, {
+      tipoId: 'tipo-evento',
+      descricao: 'Desfile da cidade',
+      inicio: '2026-04-21',
+      fim: '2026-04-21',
+    })
+    if (!ev.ok) throw new Error('evento')
+    const evento = ev.calendario.eventos.find((e) => e.descricao === 'Desfile da cidade')
+    if (!evento) throw new Error('id')
+    const aceito = aceitarAvisoEventoNoDia(ev.calendario, evento.id, '2026-04-21')
+    const movido = atualizarEvento(aceito, evento.id, {
+      tipoId: 'tipo-evento',
+      descricao: 'Desfile da cidade',
+      inicio: '2026-12-25',
+      fim: '2026-12-25',
+    })
+    expect(movido.ok).toBe(true)
+    if (!movido.ok) return
+    expect(movido.calendario.eventos.find((e) => e.id === evento.id)?.aceitosEmFeriado).toBeUndefined()
+    expect(
+      conflitosDoCalendario(movido.calendario).some((c) => c.numero === 1 && c.iso === '2026-12-25'),
+    ).toBe(true)
   })
 
   it('desligar aviso de mínimo some o conflito 7', () => {

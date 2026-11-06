@@ -32,6 +32,8 @@ export type Conflito = {
   iso?: string
   mensagem: string
   comoResolver: string
+  eventoId?: string
+  podeAceitar?: boolean
 }
 
 const TIPO_FERIAS = 'tipo-ferias'
@@ -114,13 +116,16 @@ export function conflitosDoCalendario(calendario: Calendario): Conflito[] {
     if (temBloqueio) {
       for (const ev of noDia) {
         if (ev.tipoId !== TIPO_EVENTO) continue
+        if (ev.aceitosEmFeriado?.includes(iso)) continue
         lista.push({
           id: `1-${ev.id}-${iso}`,
           numero: 1,
           gravidade: 'aviso',
           iso,
+          eventoId: ev.id,
+          podeAceitar: true,
           mensagem: `${ev.descricao} cai em ${formatarDataBr(iso)}, que é feriado, recesso ou férias.`,
-          comoResolver: 'Mova o evento para um dia de aula, ou apague o lançamento.',
+          comoResolver: 'Mova o evento para um dia de aula, apague o lançamento, ou mantenha neste dia se o evento acontece no feriado.',
         })
       }
     }
@@ -291,4 +296,21 @@ export function conflitosDoCalendario(calendario: Calendario): Conflito[] {
 
 export function conflitosDoDia(calendario: Calendario, iso: string): Conflito[] {
   return conflitosDoCalendario(calendario).filter((c) => c.iso === iso)
+}
+
+export function aceitarAvisoEventoNoDia(
+  calendario: Calendario,
+  eventoId: string,
+  iso: string,
+): Calendario {
+  return {
+    ...calendario,
+    eventos: calendario.eventos.map((ev) => {
+      if (ev.id !== eventoId) return ev
+      if (!eventoCobreIso(ev, iso)) return ev
+      if (ev.aceitosEmFeriado?.includes(iso)) return ev
+      const aceitos = [...(ev.aceitosEmFeriado ?? []), iso].sort()
+      return { ...ev, aceitosEmFeriado: aceitos }
+    }),
+  }
 }

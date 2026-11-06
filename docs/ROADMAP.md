@@ -1,7 +1,7 @@
 # ROADMAP
 
 > Lista viva. Atualize ao final de cada sessão. Em sessão nova, leia este arquivo primeiro; o prompt pode ser só "continue".
-> Última atualização: 2026-11-05 (repositório público e GitHub Pages)
+> Última atualização: 2026-11-06 (Férias, Feriado e Recesso sem combinar)
 
 ## Em andamento
 - [ ] Fase 7: publicação (hospedagem, domínio, licença)
@@ -63,6 +63,10 @@
 - [ ] Conferir a lista inicial de feriados nacionais com a lei e revisá-la uma vez por ano
 
 ## Feito
+- [x] 2026-11-06: Férias, Feriado e Recesso sem rádio de combinar com dia letivo (nunca combinam; rascunho antigo com combina ligado é ignorado)
+- [x] 2026-11-06: amostra de pintura acompanha Permite/Não permite combinar e a cor do tipo (tipos, criar tipo e lançar evento)
+- [x] 2026-11-06: após cadastro no diálogo, volta o dia/intervalo de origem; a aba de Cadastro não muda (nem ao surgir aula a repor)
+- [x] 2026-11-06: aviso de evento em feriado/recesso/férias continua; **Manter neste dia** tira a marca do calendário e guarda o aceite no rascunho
 - [x] 2026-11-05: repositório público sem PDFs/normas locais; GitHub Pages
 - [x] 2026-11-05: quadradinho da cor do tipo à frente do texto em feriados, eventos, intervalo, painel do dia e tabela
 - [x] 2026-11-05: rótulo **Tipos de marcação** (antes Tipos de dia) no cabeçalho, diálogo e docs de produto

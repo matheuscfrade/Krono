@@ -52,6 +52,35 @@ describe('ajudaPintura', () => {
     expect(ajudaPintura('tipo-retirada-letivo')).toBeNull()
     expect(ajudaPintura('tipo-ponto-facultativo')).toBeNull()
   })
+
+  it('férias ignora permite combinar', () => {
+    const a = ajudaPintura('tipo-ferias', { combinaComLetivo: true })
+    expect(a?.fundo).toBeNull()
+    expect(a?.marca).toBe(true)
+    expect(a?.texto).toContain('deixa de ser')
+  })
+
+  it('evento que não combina perde o fundo letivo', () => {
+    const a = ajudaPintura('tipo-evento', { combinaComLetivo: false })
+    expect(a?.fundo).toBeNull()
+    expect(a?.marca).toBe(true)
+    expect(a?.texto).toContain('deixa de ser')
+  })
+
+  it('tipo criado acompanha o rádio de combinar', () => {
+    const sim = ajudaPintura('tipo-criado-abc', { combinaComLetivo: true })
+    expect(sim?.fundo).toBe('letivo')
+    expect(sim?.marca).toBe(true)
+    const nao = ajudaPintura('tipo-criado-abc', { combinaComLetivo: false })
+    expect(nao?.fundo).toBeNull()
+    expect(nao?.marca).toBe(true)
+  })
+
+  it('feriado continua pintando o fundo mesmo se combinar', () => {
+    const a = ajudaPintura('tipo-feriado', { combinaComLetivo: true })
+    expect(a?.fundo).toBe('feriado')
+    expect(a?.marca).toBe(false)
+  })
 })
 
 describe('texto e cor do período', () => {

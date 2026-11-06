@@ -68,6 +68,8 @@ ajudaPintura(tipoId: string): { texto: string; fundo: 'letivo' | 'feriado' | 're
 
 `fundo` diz qual cor usar na amostra (`null` = célula vazia). `marca` diz se desenha o quadradinho na cor do tipo.
 
+A amostra segue o rádio **Permite / Não permite combinar com dia letivo** do tipo (e a cor atual). Em **Tipos de marcação** e em **Criar tipo**, a célula muda na hora. Feriado e recesso continuam pintando o próprio fundo.
+
 Período não usa `tipoId` de evento: texto e amostra de letivo ficam na tela, com a cor do tipo letivo daquele período.
 
 ## Casos de erro e mensagens

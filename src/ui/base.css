@@ -956,6 +956,11 @@ noscript p {
   margin: var(--espaco-4) 0 0;
 }
 
+.conflito-aviso .acoes,
+.conflito-erro .acoes {
+  margin-top: var(--espaco-8);
+}
+
 .conflito-aviso {
   background: rgb(183 121 31 / 18%);
   border-color: var(--cor-aviso);

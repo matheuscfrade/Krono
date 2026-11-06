@@ -68,6 +68,7 @@ import {
   type UnidadePrazo,
 } from '../dominio/calendario'
 import {
+  aceitarAvisoEventoNoDia,
   conflitosDoCalendario,
   conflitosDoDia,
   type Conflito,
@@ -75,7 +76,7 @@ import {
 import { linhasTabela, totaisLetivos } from '../dominio/tabela'
 import { baixarArquivo } from '../exportar/arquivo'
 import { excelDoCalendario, nomeArquivoExcel } from '../exportar/excel'
-import { AjudaDoTipo, AjudaPeriodo } from '../ui/AjudaPintura'
+import { AjudaDeCombina, AjudaDoTipo, AjudaPeriodo } from '../ui/AjudaPintura'
 import { Dica, DICA_COMBINA_NAO, DICA_COMBINA_SIM, DICA_PRAZO } from '../ui/Dica'
 import { CampoData } from '../ui/CampoData'
 import { MesesImpressao } from '../ui/MesesImpressao'
@@ -117,6 +118,34 @@ function estiloPintura(fundo: PinturaDoDia['fundo']): CSSProperties | undefined 
 function AmostraTipo({ cor }: { cor?: string }) {
   if (!cor) return null
   return <span className="amostra" style={{ background: cor }} aria-hidden="true" />
+}
+
+function ItemConflito({
+  c,
+  onAceitar,
+}: {
+  c: Conflito
+  onAceitar: (c: Conflito) => void
+}) {
+  return (
+    <li className={c.gravidade === 'erro' ? 'conflito-erro' : 'conflito-aviso'}>
+      <strong>{c.gravidade === 'erro' ? 'Erro' : 'Aviso'}</strong>
+      <p>
+        {c.mensagem} {c.comoResolver}
+      </p>
+      {c.podeAceitar && c.eventoId && c.iso ? (
+        <div className="acoes">
+          <button
+            type="button"
+            className="botao botao-secundario"
+            onClick={() => onAceitar(c)}
+          >
+            Manter neste dia
+          </button>
+        </div>
+      ) : null}
+    </li>
+  )
 }
 
 function linhasDica(
@@ -382,6 +411,10 @@ function FormularioRegra({
 
 type AbaCadastro = 'periodos' | 'feriados' | 'eventos' | 'avisos' | 'tabela'
 
+type VoltaPopup =
+  | { tipo: 'dia'; iso: string }
+  | { tipo: 'escolha'; inicio: string; fim: string }
+
 const ABAS_CADASTRO: { id: AbaCadastro; rotulo: string }[] = [
   { id: 'periodos', rotulo: 'Períodos' },
   { id: 'feriados', rotulo: 'Feriados e recessos' },
@@ -465,6 +498,8 @@ export function CalendarioAno({
   const [modeloRegra, setModeloRegra] = useState<ModeloRegraUsuario>('presenca')
   const [formTipo, setFormTipo] = useState(false)
   const [errosTipo, setErrosTipo] = useState<ErroCampo[]>([])
+  const [novoTipoCor, setNovoTipoCor] = useState('#38a169')
+  const [novoTipoCombina, setNovoTipoCombina] = useState(true)
   const conflitos = conflitosDoCalendario(calendario)
   const regras = regrasDo(calendario)
   const linhas = linhasTabela(calendario)
@@ -509,7 +544,7 @@ export function CalendarioAno({
   const cadastrosEscolha = escolhaLancamento
     ? cadastrosDoIntervalo(calendario, escolhaLancamento.inicio, escolhaLancamento.fim)
     : { eventos: [] }
-  const tinhaARepor = useRef(false)
+  const voltaPopup = useRef<VoltaPopup | null>(null)
   const inicioTipoEvento = eventoEditando?.inicio ?? eventoInicio
   const fimTipoEvento = (eventoEditando?.fim ?? eventoFim) || inicioTipoEvento
   const tiposLancaveis = tiposDiaOrdenados(calendario.tiposDia).filter((t) => {
@@ -537,15 +572,6 @@ export function CalendarioAno({
   }, [diaAberto])
 
   useEffect(() => {
-    const tem = listaARepor.length > 0
-    if (tem && !tinhaARepor.current) {
-      setAbaCadastro('feriados')
-      setCadastroAberto(true)
-    }
-    tinhaARepor.current = tem
-  }, [listaARepor.length])
-
-  useEffect(() => {
     if (!formAberto && !formEvento && !formFeriado && !formTipo && !formRegra && !formTipos && !formRegras) return
     const dialogo = document.querySelector('.dialogo')
     const campo = dialogo?.querySelector<HTMLElement>('input, select, textarea')
@@ -558,14 +584,6 @@ export function CalendarioAno({
       if (arraste.current) {
         arraste.current = null
         setSelecao(null)
-        return
-      }
-      if (escolhaLancamento) {
-        setEscolhaLancamento(null)
-        return
-      }
-      if (diaAberto) {
-        fecharDia()
         return
       }
       if (formEvento) {
@@ -596,6 +614,14 @@ export function CalendarioAno({
       }
       if (formRegras) {
         setFormRegras(false)
+        return
+      }
+      if (escolhaLancamento) {
+        setEscolhaLancamento(null)
+        return
+      }
+      if (diaAberto) {
+        fecharDia()
         return
       }
       if (anoPendente !== null) {
@@ -639,48 +665,81 @@ export function CalendarioAno({
           .filter(Boolean)
           .join(' · ')
 
-  function abrirCadastro(aba: AbaCadastro) {
-    setAbaCadastro(aba)
-    setCadastroAberto(true)
+  function capturarVoltaPopup() {
+    if (voltaPopup.current) return
+    if (diaAberto) {
+      voltaPopup.current = { tipo: 'dia', iso: diaAberto }
+      return
+    }
+    if (escolhaLancamento) {
+      voltaPopup.current = {
+        tipo: 'escolha',
+        inicio: escolhaLancamento.inicio,
+        fim: escolhaLancamento.fim,
+      }
+    }
   }
 
-  function fecharFormPeriodo() {
+  function restaurarVoltaPopup() {
+    const volta = voltaPopup.current
+    voltaPopup.current = null
+    if (!volta) return
+    if (volta.tipo === 'dia') setDiaAberto(volta.iso)
+    else setEscolhaLancamento({ inicio: volta.inicio, fim: volta.fim })
+  }
+
+  function limparFormPeriodo() {
     setFormAberto(false)
     setEditandoId(null)
     setErros([])
   }
 
-  function fecharFormFeriado() {
+  function limparFormFeriado() {
     setFormFeriado(false)
     setEditandoFeriadoId(null)
     setErrosFeriado([])
   }
 
-  function fecharFormEvento() {
+  function limparFormEvento() {
     setFormEvento(false)
     setEditandoEventoId(null)
     setErrosEvento([])
   }
 
+  function fecharFormPeriodo() {
+    limparFormPeriodo()
+    restaurarVoltaPopup()
+  }
+
+  function fecharFormFeriado() {
+    limparFormFeriado()
+    restaurarVoltaPopup()
+  }
+
+  function fecharFormEvento() {
+    limparFormEvento()
+    restaurarVoltaPopup()
+  }
+
   function abrirNovo() {
-    fecharFormFeriado()
-    fecharFormEvento()
+    capturarVoltaPopup()
+    limparFormFeriado()
+    limparFormEvento()
     setDiaAberto(null)
     setEscolhaLancamento(null)
     setEditandoId(null)
     setErros([])
-    abrirCadastro('periodos')
     setFormAberto(true)
   }
 
   function abrirEdicao(id: string) {
-    fecharFormFeriado()
-    fecharFormEvento()
+    capturarVoltaPopup()
+    limparFormFeriado()
+    limparFormEvento()
     setDiaAberto(null)
     setEscolhaLancamento(null)
     setEditandoId(id)
     setErros([])
-    abrirCadastro('periodos')
     setFormAberto(true)
   }
 
@@ -769,8 +828,9 @@ export function CalendarioAno({
 
   function abrirFormFeriado(inicio: string, fim: string, id: string | null = null) {
     const ev = id ? calendario.eventos.find((e) => e.id === id) : null
-    fecharFormPeriodo()
-    fecharFormEvento()
+    capturarVoltaPopup()
+    limparFormPeriodo()
+    limparFormEvento()
     setDiaAberto(null)
     setEscolhaLancamento(null)
     setEditandoFeriadoId(id)
@@ -778,14 +838,14 @@ export function CalendarioAno({
     setFeriadoInicio(inicio)
     setFeriadoFim(fim)
     setFeriadoTipo(ev?.tipoId === TIPO_RECESSO ? 'recesso' : 'feriado')
-    abrirCadastro('feriados')
     setFormFeriado(true)
   }
 
   function abrirFormEvento(inicio: string, fim: string, id: string | null = null) {
     const ev = id ? calendario.eventos.find((e) => e.id === id) : null
-    fecharFormPeriodo()
-    fecharFormFeriado()
+    capturarVoltaPopup()
+    limparFormPeriodo()
+    limparFormFeriado()
     setDiaAberto(null)
     setEscolhaLancamento(null)
     setEditandoEventoId(id)
@@ -794,13 +854,18 @@ export function CalendarioAno({
     setEventoFim(fim)
     setEventoTipoId(ev?.tipoId ?? 'tipo-evento')
     setEventoDataOriginal(ev?.dataOriginal ?? '')
-    abrirCadastro('eventos')
     setFormEvento(true)
   }
 
+  function aceitarAviso(c: Conflito) {
+    if (!c.eventoId || !c.iso) return
+    onMudou(aceitarAvisoEventoNoDia(calendario, c.eventoId, c.iso))
+  }
+
   function abrirRepor(dataOriginal: string) {
-    fecharFormPeriodo()
-    fecharFormFeriado()
+    capturarVoltaPopup()
+    limparFormPeriodo()
+    limparFormFeriado()
     setDiaAberto(null)
     setEscolhaLancamento(null)
     setEditandoEventoId(null)
@@ -809,7 +874,6 @@ export function CalendarioAno({
     setEventoFim('')
     setEventoTipoId(TIPO_REPOSICAO)
     setEventoDataOriginal(dataOriginal)
-    abrirCadastro('feriados')
     setFormEvento(true)
   }
 
@@ -1220,12 +1284,7 @@ export function CalendarioAno({
           ) : (
             <ul className="lista-conflitos">
               {listaConflitos.map((c) => (
-                <li key={c.id} className={c.gravidade === 'erro' ? 'conflito-erro' : 'conflito-aviso'}>
-                  <strong>{c.gravidade === 'erro' ? 'Erro' : 'Aviso'}</strong>
-                  <p>
-                    {c.mensagem} {c.comoResolver}
-                  </p>
-                </li>
+                <ItemConflito key={c.id} c={c} onAceitar={aceitarAviso} />
               ))}
             </ul>
           )}
@@ -1701,10 +1760,7 @@ export function CalendarioAno({
                           <button
                             type="button"
                             className="botao botao-principal"
-                            onClick={() => {
-                              setEscolhaLancamento(null)
-                              abrirCadastroDoEvento(ev)
-                            }}
+                            onClick={() => abrirCadastroDoEvento(ev)}
                           >
                             Editar
                           </button>
@@ -1739,7 +1795,6 @@ export function CalendarioAno({
                 className="botao botao-principal"
                 onClick={() => {
                   const { inicio, fim } = escolhaLancamento
-                  setEscolhaLancamento(null)
                   abrirFormEvento(inicio, fim)
                 }}
               >
@@ -1750,7 +1805,6 @@ export function CalendarioAno({
                 className="botao botao-secundario"
                 onClick={() => {
                   const { inicio, fim } = escolhaLancamento
-                  setEscolhaLancamento(null)
                   abrirFormFeriado(inicio, fim)
                 }}
               >
@@ -1781,12 +1835,7 @@ export function CalendarioAno({
             {conflitosDoDia(calendario, diaAberto).length > 0 ? (
               <ul className="lista-conflitos">
                 {conflitosDoDia(calendario, diaAberto).map((c) => (
-                  <li key={c.id} className={c.gravidade === 'erro' ? 'conflito-erro' : 'conflito-aviso'}>
-                    <strong>{c.gravidade === 'erro' ? 'Erro' : 'Aviso'}</strong>
-                    <p>
-                      {c.mensagem} {c.comoResolver}
-                    </p>
-                  </li>
+                  <ItemConflito key={c.id} c={c} onAceitar={aceitarAviso} />
                 ))}
               </ul>
             ) : null}
@@ -1869,9 +1918,7 @@ export function CalendarioAno({
                 type="button"
                 className="botao botao-secundario"
                 onClick={() => {
-                  const iso = diaAberto
-                  fecharDia()
-                  if (iso) abrirFormEvento(iso, iso)
+                  if (diaAberto) abrirFormEvento(diaAberto, diaAberto)
                 }}
               >
                 Adicionar evento
@@ -1880,9 +1927,7 @@ export function CalendarioAno({
                 type="button"
                 className="botao botao-secundario"
                 onClick={() => {
-                  const iso = diaAberto
-                  fecharDia()
-                  if (iso) abrirFormFeriado(iso, iso)
+                  if (diaAberto) abrirFormFeriado(diaAberto, diaAberto)
                 }}
               >
                 Adicionar feriado ou recesso
@@ -2050,6 +2095,11 @@ export function CalendarioAno({
                           </label>
                         </fieldset>
                       ) : null}
+                      <AjudaDoTipo
+                        calendario={calendario}
+                        tipoId={tipo.id}
+                        tipoLetivoId={calendario.periodos[0]?.tipoLetivoId}
+                      />
                       <label className="interruptor">
                         <input
                           type="checkbox"
@@ -2081,6 +2131,8 @@ export function CalendarioAno({
               className="botao botao-principal"
               onClick={() => {
                 setErrosTipo([])
+                setNovoTipoCor('#38a169')
+                setNovoTipoCombina(true)
                 setFormTipo(true)
               }}
             >
@@ -2127,7 +2179,13 @@ export function CalendarioAno({
             </div>
             <div className="campo">
               <label htmlFor="tipo-cor">Cor</label>
-              <input id="tipo-cor" name="cor" type="color" defaultValue="#38a169" />
+              <input
+                id="tipo-cor"
+                name="cor"
+                type="color"
+                value={novoTipoCor}
+                onChange={(e) => setNovoTipoCor(e.target.value)}
+              />
               {erroDoCampo(errosTipo, 'cor') ? (
                 <p className="erro-campo">{erroDoCampo(errosTipo, 'cor')}</p>
               ) : null}
@@ -2135,20 +2193,37 @@ export function CalendarioAno({
             <fieldset className="grupo-interruptores">
               <legend>Dia letivo</legend>
               <label className="interruptor">
-                <input type="radio" name="combina" value="sim" defaultChecked />
+                <input
+                  type="radio"
+                  name="combina"
+                  value="sim"
+                  checked={novoTipoCombina}
+                  onChange={() => setNovoTipoCombina(true)}
+                />
                 <span className="interruptor-texto">
                   Permite combinar com dia letivo
                   <Dica texto={DICA_COMBINA_SIM} />
                 </span>
               </label>
               <label className="interruptor">
-                <input type="radio" name="combina" value="nao" />
+                <input
+                  type="radio"
+                  name="combina"
+                  value="nao"
+                  checked={!novoTipoCombina}
+                  onChange={() => setNovoTipoCombina(false)}
+                />
                 <span className="interruptor-texto">
                   Não permite combinar com dia letivo
                   <Dica texto={DICA_COMBINA_NAO} />
                 </span>
               </label>
             </fieldset>
+            <AjudaDeCombina
+              calendario={calendario}
+              combinaComLetivo={novoTipoCombina}
+              corMarca={novoTipoCor}
+            />
             <label className="interruptor">
               <input type="checkbox" name="entraNoPrazo" />
               <span className="interruptor-texto">

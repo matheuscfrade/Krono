@@ -1,3 +1,5 @@
+import { TIPO_EVENTO, TIPO_RETIRADA, tipoCriaAula, tipoNuncaCombina } from './calendario'
+
 export type FundoAmostra = 'letivo' | 'feriado' | 'recesso'
 
 export type AjudaPintura = {
@@ -8,6 +10,15 @@ export type AjudaPintura = {
 
 export const TEXTO_AJUDA_PERIODO =
   'Pinta o **fundo** de segunda a sexta na cor desta etapa. Sábado vira aula se você lançar um evento nesse dia. Domingo fica sem fundo.'
+
+const TEXTO_MARCA_COMBINA =
+  'Aparece um **quadradinho**. Se o dia já era aula, o fundo letivo **continua**.'
+
+const TEXTO_MARCA_NAO_COMBINA =
+  'Não pinta o fundo. Aparece um **quadradinho** no dia. Se o dia era letivo, deixa de ser.'
+
+const TEXTO_EVENTO_NAO_COMBINA =
+  'Não pinta o fundo. Aparece um **quadradinho**. Se o dia era letivo, deixa de ser. Em **sábado**, o dia ainda vira aula.'
 
 const AJUDAS: Record<string, AjudaPintura> = {
   'tipo-feriado': {
@@ -21,17 +32,17 @@ const AJUDAS: Record<string, AjudaPintura> = {
     marca: false,
   },
   'tipo-ferias': {
-    texto: 'Não pinta o fundo. Aparece um **quadradinho** no dia. Se o dia era letivo, deixa de ser.',
+    texto: TEXTO_MARCA_NAO_COMBINA,
     fundo: null,
     marca: true,
   },
   'tipo-exames': {
-    texto: 'Não pinta o fundo. Aparece um **quadradinho** no dia. Se o dia era letivo, deixa de ser.',
+    texto: TEXTO_MARCA_NAO_COMBINA,
     fundo: null,
     marca: true,
   },
   'tipo-recuperacao': {
-    texto: 'Não pinta o fundo. Aparece um **quadradinho** no dia. Se o dia era letivo, deixa de ser.',
+    texto: TEXTO_MARCA_NAO_COMBINA,
     fundo: null,
     marca: true,
   },
@@ -57,6 +68,26 @@ const AJUDAS: Record<string, AjudaPintura> = {
 export const TEXTO_AJUDA_RETIRADA =
   'Tira o **fundo** de aula. O dia fica em branco, sem marca.'
 
-export function ajudaPintura(tipoId: string): AjudaPintura | null {
-  return AJUDAS[tipoId] ?? null
+export function ajudaPintura(
+  tipoId: string,
+  opcoes?: { combinaComLetivo?: boolean },
+): AjudaPintura | null {
+  if (tipoId === TIPO_RETIRADA || tipoId === 'tipo-ponto-facultativo') return null
+  const padrao = AJUDAS[tipoId]
+  if (opcoes?.combinaComLetivo === undefined) return padrao ?? null
+  if (tipoNuncaCombina(tipoId) || tipoCriaAula(tipoId)) {
+    return padrao ?? null
+  }
+  if (opcoes.combinaComLetivo) {
+    return {
+      texto: padrao && tipoId === TIPO_EVENTO ? padrao.texto : TEXTO_MARCA_COMBINA,
+      fundo: 'letivo',
+      marca: true,
+    }
+  }
+  return {
+    texto: tipoId === TIPO_EVENTO ? TEXTO_EVENTO_NAO_COMBINA : TEXTO_MARCA_NAO_COMBINA,
+    fundo: null,
+    marca: true,
+  }
 }

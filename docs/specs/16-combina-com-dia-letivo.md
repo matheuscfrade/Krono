@@ -18,7 +18,7 @@ O que a pessoa precisa decidir é um só:
 **Conta nos totais** continua: só diz se, **quando o dia for aula**, entra nos 200.
 
 ## Jornada
-1. Em **Tipos de marcação**, abre Feriado: vê **Não permite combinar com dia letivo** e **Conta nos totais** desligado.
+1. Em **Tipos de marcação**, abre Feriado: sem rádio de combinar (Feriado, Recesso e Férias nunca combinam). **Conta nos totais** desligado.
 2. Abre Evento: vê **Permite combinar com dia letivo** e **Conta nos totais** ligado. Um Evento numa terça da etapa mantém o fundo de aula e ganha a marca.
 3. Liga **Permite combinar** em Recuperação. Uma recuperação numa terça da etapa deixa de tirar a aula: fundo letivo + marca. Fora da etapa, o dia continua sem aula (não há letivo com o que combinar).
 4. **Criar tipo:** nome, cor, os dois rádios e Conta nos totais. Padrão: permite combinar, conta nos totais.
@@ -35,7 +35,7 @@ Bloco **Tipos de marcação** e diálogo **Novo tipo de marcação**:
 
 Tipos **Dia letivo — {período}** continuam só com a cor (sem esses campos).
 
-**Reposição** e **Sábado letivo** não mostram os rádios: o papel deles é criar aula onde ainda não havia. Só cor e **Conta nos totais**.
+**Férias**, **Feriado** e **Recesso** não mostram os rádios: nunca combinam; o dia deixa de ser aula. **Reposição** e **Sábado letivo** também não: o papel deles é criar aula onde ainda não havia. Só cor e **Conta nos totais**.
 
 ## Regras
 Cálculo em `src/dominio`, com testes. Sem React.
@@ -58,7 +58,8 @@ Padrão dos tipos prontos:
 
 | Tipo | Combina com dia letivo | Conta nos totais |
 |---|---|---|
-| Feriado, Recesso, Férias, Exames finais, Recuperação, Retirada | não | não |
+| Feriado, Recesso, Férias | (sem rádio; nunca combinam) | não |
+| Exames finais, Recuperação, Retirada | não | não |
 | Evento | sim | sim |
 | Tipo criado | sim | sim |
 | Reposição, Sábado letivo | (sem rádio; sempre criam aula) | sim |
