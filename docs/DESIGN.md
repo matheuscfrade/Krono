@@ -32,6 +32,7 @@ Ferramenta de trabalho limpa e calma, que deixa o calendário colorido ser o des
 - **Início:** box quadrado Começar no centro da tela; grade de células animada cobre o fundo inteiro.
 - **Interruptor:** liga/desliga com rótulo à esquerda, alvo de 44 px. O mesmo padrão nas regras ligáveis.
 - **Formulário:** um campo por linha no celular, rótulo acima, erro logo abaixo do campo dizendo o que corrigir. Cadastro e edição de período, feriado, evento e retirada abrem num diálogo (mesmo padrão do painel do dia), com rolagem se o conteúdo passar da tela.
+- **Tutorial:** popup pequeno (cartão, no máximo ~22 rem) com um cartão por vez, progresso “1 de N”, pontos de posição, Anterior / Próximo (Entendi no último) e Pular. Fundo igual aos outros diálogos. Cores só dos tokens.
 - **Bloco de cadastro:** um só cartão colapsável **Cadastro** com abas (Períodos, Feriados e recessos, Eventos, Avisos e conflitos, Tabela de detalhamento). Cada aba lista os itens já lançados, Editar e Apagar, e o botão de adicionar. O formulário não fica dentro do bloco. Calendário e Legenda ficam sempre visíveis. Tipos de marcação abre em diálogo, pelo cabeçalho.
 - **Abas:** empilham com quebra de linha no celular; cada aba tem altura mínima de 44 px. A aba ativa usa a cor da marca.
 - **Tabela:** no computador é tabela; no celular vira cartões.

@@ -1,7 +1,7 @@
 # ROADMAP
 
 > Lista viva. Atualize ao final de cada sessão. Em sessão nova, leia este arquivo primeiro; o prompt pode ser só "continue".
-> Última atualização: 2026-11-06 (Férias, Feriado e Recesso sem combinar)
+> Última atualização: 2026-11-06 (tutorial em cartões)
 
 ## Em andamento
 - [ ] Fase 7: publicação (hospedagem, domínio, licença)
@@ -63,6 +63,7 @@
 - [ ] Conferir a lista inicial de feriados nacionais com a lei e revisá-la uma vez por ano
 
 ## Feito
+- [x] 2026-11-06: Spec 21 — tutorial em cartões ao clicar em Novo calendário; **Como usar** no cabeçalho (form e ano)
 - [x] 2026-11-06: Férias, Feriado e Recesso sem rádio de combinar com dia letivo (nunca combinam; rascunho antigo com combina ligado é ignorado)
 - [x] 2026-11-06: amostra de pintura acompanha Permite/Não permite combinar e a cor do tipo (tipos, criar tipo e lançar evento)
 - [x] 2026-11-06: após cadastro no diálogo, volta o dia/intervalo de origem; a aba de Cadastro não muda (nem ao surgir aula a repor)

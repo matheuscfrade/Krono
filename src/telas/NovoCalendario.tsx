@@ -9,13 +9,14 @@ import { Rodape } from '../ui/Rodape'
 type Props = {
   onCriado: (calendario: Calendario) => void
   onVoltar: () => void
+  onComoUsar: () => void
 }
 
 function erroDoCampo(erros: ErroCampo[], campo: string): string {
   return erros.find((e) => e.campo === campo)?.mensagem ?? ''
 }
 
-export function NovoCalendario({ onCriado, onVoltar }: Props) {
+export function NovoCalendario({ onCriado, onVoltar, onComoUsar }: Props) {
   const [erros, setErros] = useState<ErroCampo[]>([])
   const [ano, setAno] = useState(String(new Date().getFullYear()))
 
@@ -36,9 +37,16 @@ export function NovoCalendario({ onCriado, onVoltar }: Props) {
 
   return (
     <main className="pagina">
-      <header>
-        <h1>Novo calendário</h1>
-        <p className="subtitulo">Nome, instituição e ano.</p>
+      <header className="cabecalho-tela">
+        <div>
+          <h1>Novo calendário</h1>
+          <p className="subtitulo">Nome, instituição e ano.</p>
+        </div>
+        <div className="acoes">
+          <button type="button" className="botao botao-secundario" onClick={onComoUsar}>
+            Como usar
+          </button>
+        </div>
       </header>
 
       <form className="cartao" onSubmit={enviar} noValidate>

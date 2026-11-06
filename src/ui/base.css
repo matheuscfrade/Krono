@@ -273,6 +273,13 @@ h3 {
   opacity: 0.55;
 }
 
+.botao-texto {
+  background: transparent;
+  color: var(--cor-marca);
+  border: 0;
+  align-self: center;
+}
+
 .recado {
   color: var(--cor-texto-secundario);
   font-size: var(--tamanho-14);
@@ -896,6 +903,49 @@ noscript p {
   gap: var(--espaco-16);
 }
 
+.dialogo-fundo-tutorial {
+  z-index: 11;
+}
+
+.dialogo-tutorial {
+  max-width: 22rem;
+  box-shadow: var(--sombra);
+}
+
+.dialogo-tutorial:focus {
+  outline: none;
+}
+
+.dialogo-tutorial:focus-visible {
+  outline: 3px solid var(--cor-info);
+  outline-offset: 2px;
+}
+
+.tutorial-progresso {
+  color: var(--cor-texto-secundario);
+  font-size: var(--tamanho-14);
+}
+
+.tutorial-pontos {
+  display: flex;
+  gap: var(--espaco-8);
+  justify-content: center;
+  align-items: center;
+}
+
+.tutorial-ponto {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--raio-etiqueta);
+  background: var(--cor-borda);
+}
+
+.tutorial-ponto.atual {
+  background: var(--cor-marca);
+  width: 12px;
+  height: 12px;
+}
+
 .pagina-ano {
   max-width: var(--largura-max);
 }
@@ -1145,6 +1195,10 @@ noscript p {
 }
 
 @media print {
+  .dialogo-fundo {
+    display: none !important;
+  }
+
   html,
   body,
   #root,

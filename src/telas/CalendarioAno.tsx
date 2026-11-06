@@ -88,6 +88,7 @@ type Props = {
   onVoltar: () => void
   onSalvarArquivo: () => void
   onAbrirArquivo: () => void
+  onComoUsar: () => void
   mudancasNaoBaixadas: boolean
 }
 
@@ -464,6 +465,7 @@ export function CalendarioAno({
   onVoltar,
   onSalvarArquivo,
   onAbrirArquivo,
+  onComoUsar,
   mudancasNaoBaixadas,
 }: Props) {
   const [formAberto, setFormAberto] = useState(false)
@@ -1030,6 +1032,9 @@ export function CalendarioAno({
           </div>
         </div>
         <div className="acoes">
+          <button type="button" className="botao botao-secundario" onClick={onComoUsar}>
+            Como usar
+          </button>
           <button
             type="button"
             className="botao botao-secundario"

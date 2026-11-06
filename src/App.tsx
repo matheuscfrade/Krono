@@ -5,6 +5,7 @@ import { baixarArquivo } from './exportar/arquivo'
 import { CalendarioAno } from './telas/CalendarioAno'
 import { Inicio } from './telas/Inicio'
 import { NovoCalendario } from './telas/NovoCalendario'
+import { Tutorial } from './ui/Tutorial'
 
 type Tela = 'inicio' | 'novo' | 'ano'
 
@@ -13,6 +14,7 @@ export default function App() {
   const [calendario, setCalendario] = useState<Calendario | null>(null)
   const [assinaturaBaixada, setAssinaturaBaixada] = useState('')
   const [recadoInicio, setRecadoInicio] = useState('')
+  const [tutorialAberto, setTutorialAberto] = useState(false)
   const arquivoRef = useRef<HTMLInputElement>(null)
 
   const mudancasNaoBaixadas = Boolean(
@@ -73,6 +75,10 @@ export default function App() {
     />
   )
 
+  const tutorial = tutorialAberto ? (
+    <Tutorial onFechar={() => setTutorialAberto(false)} />
+  ) : null
+
   if (tela === 'novo') {
     return (
       <>
@@ -80,7 +86,9 @@ export default function App() {
         <NovoCalendario
           onCriado={(criado) => abrirCalendario(criado, false)}
           onVoltar={() => setTela('inicio')}
+          onComoUsar={() => setTutorialAberto(true)}
         />
+        {tutorial}
       </>
     )
   }
@@ -95,12 +103,14 @@ export default function App() {
           mudancasNaoBaixadas={mudancasNaoBaixadas}
           onSalvarArquivo={salvarArquivo}
           onAbrirArquivo={() => arquivoRef.current?.click()}
+          onComoUsar={() => setTutorialAberto(true)}
           onVoltar={() => {
             setCalendario(null)
             setAssinaturaBaixada('')
             setTela('inicio')
           }}
         />
+        {tutorial}
       </>
     )
   }
@@ -113,9 +123,11 @@ export default function App() {
         onNovo={() => {
           setRecadoInicio('')
           setTela('novo')
+          setTutorialAberto(true)
         }}
         onAbrirArquivo={() => arquivoRef.current?.click()}
       />
+      {tutorial}
     </>
   )
 }
